@@ -34,7 +34,7 @@ function arcPointsByBearing(centre, initialBearing, finalBearing, radius) {
     finalBearing += 360;
   }
 
-  const delta = 2;
+  const delta = (finalBearing - initialBearing) / 32;
 
   for (let i = initialBearing; i <= finalBearing; i += delta) {
     points.push(google.maps.geometry.spherical.computeOffset(centre, radius, i));
@@ -155,7 +155,7 @@ function initMap() {
   });
 
   const start = '431 skipton st, redan';
-  const end = '62 fitzgibbon st, parkville';
+  const end = '11 kellett st, potts point';
   const request = {
     origin: start,
     destination: end,
