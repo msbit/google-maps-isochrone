@@ -22,37 +22,97 @@ function makeResult(step) {
   return result;
 }
 
+function arcPointsByLength(centre, middleBearing, arcLength, radius) {
+  const delta = (360 * arcLength) / (4 * Math.PI * radius);
+  return arcPointsByBearing(centre, middleBearing - delta, middleBearing + delta, radius);
+}
+
+function arcPointsByBearing(centre, initialBearing, finalBearing, radius) {
+  const points = [];
+
+  if (initialBearing > finalBearing) {
+    finalBearing += 360;
+  }
+
+  const delta = 2;
+
+  for (let i = initialBearing; i <= finalBearing; i += delta) {
+    points.push(google.maps.geometry.spherical.computeOffset(centre, radius, i));
+  }
+  return points;
+}
+
+function getInterval(duration) {
+  if (duration > 300 && duration <= 900) {
+    return 60
+  }
+  if (duration > 900 && duration <= 2400) {
+    return 300;
+  }
+  if (duration > 2400 && duration <= 4500) {
+    return 600;
+  }
+  if (duration > 4500 && duration <= 7200) {
+    return 900;
+  }
+  if (duration > 7200 && duration <= 86400) {
+    return 3600;
+  }
+  if (duration > 86400 && duration <= 604800) {
+    return 21600;
+  }
+  return 86400;
+}
+
+function withoutDuplicates(array, isDuplicate) {
+  let result = [];
+  result.push(array[0]);
+  for (let i = 1; i < array.length; i++) {
+    if (!isDuplicate(array[i - 1], array[i])) {
+      result.push(array[i]);
+    }
+  }
+  return result;
+}
+
 function splitSteps(steps, duration) {
   let result = [];
   let currentDuration = 0;
   let currentPoints = [];
+  let data = [];
+
   for (let step of steps) {
-    const stepPoints = google.maps.geometry.encoding.decodePath(step.polyline.points);
-    const stepSpeed = step.distance.value / step.duration.value;
-
-    let prevPoint = stepPoints[0];
-    currentPoints.push({
-      point: stepPoints[0],
-      speed: stepSpeed
-    });
-    for (let i = 1; i < stepPoints.length; i++) {
-      const pointDistance = google.maps.geometry.spherical.computeDistanceBetween(prevPoint, stepPoints[i]);
-      currentDuration += pointDistance / stepSpeed;
-      currentPoints.push({
-        point: stepPoints[i],
-        speed: stepSpeed
+    const speed = step.distance.value / step.duration.value;
+    for (let point of google.maps.geometry.encoding.decodePath(step.polyline.points)) {
+      data.push({
+        point: point,
+        speed: speed
       });
-      if (currentDuration > result.length * duration) {
-        result.push(createStep(currentPoints));
-        currentPoints.length = 0;
-      }
-
-      prevPoint = stepPoints[i];
     }
   }
-  if (currentPoints.length) {
-    result.push(createStep(currentPoints));
+
+  data = withoutDuplicates(data, function (a, b) {
+    return google.maps.geometry.spherical.computeDistanceBetween(a.point, b.point) === 0;
+  });
+
+  let i = 0;
+  let j = 1;
+  while (j < data.length) {
+    const previous = data[j - 1];
+    const current = data[j];
+    const speed = data[j].speed;
+    const distance = google.maps.geometry.spherical.computeDistanceBetween(previous.point, current.point);
+    currentDuration += distance / speed;
+    if (currentDuration > result.length * duration) {
+      result.push(createStep(data.slice(i, j + 1)));
+      i = j;
+    }
+    j++;
   }
+  if (i < j) {
+    result.push(createStep(data.slice(i, j + 1)));
+  }
+
   return result;
 }
 
@@ -94,8 +154,8 @@ function initMap() {
     zoom: 8
   });
 
-  const start = '201 spring st, melbourne';
-  const end = '14 easey st, collingwood';
+  const start = '431 skipton st, redan';
+  const end = '62 fitzgibbon st, parkville';
   const request = {
     origin: start,
     destination: end,
@@ -107,13 +167,27 @@ function initMap() {
       if (result.routes.length && result.routes[0].legs.length && result.routes[0].legs[0].steps.length) {
         map.fitBounds(result.routes[0].bounds);
         const duration = result.routes[0].legs[0].duration.value;
-        const stepCount = 2;
 
-        splitSteps(result.routes[0].legs[0].steps, duration / stepCount).forEach(function (step, i) {
+        const start = result.routes[0].legs[0].start_location;
+
+        splitSteps(result.routes[0].legs[0].steps, 600).forEach(function (step, i, steps) {
+          const hue = 360 - (i * (360 / steps.length));
+          const end = step.path[step.path.length - 1];
+          const radius = google.maps.geometry.spherical.computeDistanceBetween(start, end);
+          const heading = google.maps.geometry.spherical.computeHeading(start, end);
+          const arc = new google.maps.Polyline({
+            map: map,
+            path: arcPointsByLength(start, heading, 10000, radius),
+            strokeColor: `hsl(${hue}, 50%, 50%)`,
+            strokeOpacity: 0.8,
+            strokeWeight: 3
+          });
           const renderer = new google.maps.DirectionsRenderer({
             map: map,
             polylineOptions: {
-              strokeColor: `hsl(${120 - (i * (120 / stepCount))}, 50%, 50%)`
+              strokeColor: `hsl(${hue}, 50%, 50%)`,
+              strokeOpacity: 0.8,
+              strokeWeight: 3
             },
             preserveViewport: true,
             suppressMarkers: true
