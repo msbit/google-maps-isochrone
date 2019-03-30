@@ -42,28 +42,6 @@ function arcPointsByBearing (centre, initialBearing, finalBearing, radius) {
   return points;
 }
 
-function getInterval (duration) {
-  if (duration > 300 && duration <= 900) {
-    return 60;
-  }
-  if (duration > 900 && duration <= 2400) {
-    return 300;
-  }
-  if (duration > 2400 && duration <= 4500) {
-    return 600;
-  }
-  if (duration > 4500 && duration <= 7200) {
-    return 900;
-  }
-  if (duration > 7200 && duration <= 86400) {
-    return 3600;
-  }
-  if (duration > 86400 && duration <= 604800) {
-    return 21600;
-  }
-  return 86400;
-}
-
 function withoutDuplicates (array, isDuplicate) {
   let result = [];
   result.push(array[0]);
@@ -78,7 +56,6 @@ function withoutDuplicates (array, isDuplicate) {
 function splitSteps (steps, duration) {
   let result = [];
   let currentDuration = 0;
-  let currentPoints = [];
   let data = [];
 
   for (let step of steps) {
@@ -166,7 +143,6 @@ function initMap () {
     if (status === google.maps.DirectionsStatus.OK) {
       if (result.routes.length && result.routes[0].legs.length && result.routes[0].legs[0].steps.length) {
         map.fitBounds(result.routes[0].bounds);
-        const duration = result.routes[0].legs[0].duration.value;
 
         const start = result.routes[0].legs[0].start_location;
 
