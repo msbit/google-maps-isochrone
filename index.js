@@ -8,7 +8,7 @@ window.addEventListener('load', () => {
   head.appendChild(script);
 });
 
-function makeResult(step) {
+function makeResult (step) {
   const result = {
     request: {
       travelMode: google.maps.DirectionsTravelMode.DRIVING
@@ -22,12 +22,12 @@ function makeResult(step) {
   return result;
 }
 
-function arcPointsByLength(centre, middleBearing, arcLength, radius) {
+function arcPointsByLength (centre, middleBearing, arcLength, radius) {
   const delta = (360 * arcLength) / (4 * Math.PI * radius);
   return arcPointsByBearing(centre, middleBearing - delta, middleBearing + delta, radius);
 }
 
-function arcPointsByBearing(centre, initialBearing, finalBearing, radius) {
+function arcPointsByBearing (centre, initialBearing, finalBearing, radius) {
   const points = [];
 
   if (initialBearing > finalBearing) {
@@ -42,9 +42,9 @@ function arcPointsByBearing(centre, initialBearing, finalBearing, radius) {
   return points;
 }
 
-function getInterval(duration) {
+function getInterval (duration) {
   if (duration > 300 && duration <= 900) {
-    return 60
+    return 60;
   }
   if (duration > 900 && duration <= 2400) {
     return 300;
@@ -64,7 +64,7 @@ function getInterval(duration) {
   return 86400;
 }
 
-function withoutDuplicates(array, isDuplicate) {
+function withoutDuplicates (array, isDuplicate) {
   let result = [];
   result.push(array[0]);
   for (let i = 1; i < array.length; i++) {
@@ -75,7 +75,7 @@ function withoutDuplicates(array, isDuplicate) {
   return result;
 }
 
-function splitSteps(steps, duration) {
+function splitSteps (steps, duration) {
   let result = [];
   let currentDuration = 0;
   let currentPoints = [];
@@ -116,22 +116,22 @@ function splitSteps(steps, duration) {
   return result;
 }
 
-function getDetails(data) {
-    let distance = 0;
-    let duration = 0;
-    let previous = data[0];
+function getDetails (data) {
+  let distance = 0;
+  let duration = 0;
+  let previous = data[0];
 
-    for (let i = 0; i < data.length; i++) {
-      const current = data[i];
-      const currentDistance = google.maps.geometry.spherical.computeDistanceBetween(previous.point, current.point);
-      distance += currentDistance;
-      duration += currentDistance / current.speed;
-      previous = data[i];
-    }
-    return [distance, duration];
+  for (let i = 0; i < data.length; i++) {
+    const current = data[i];
+    const currentDistance = google.maps.geometry.spherical.computeDistanceBetween(previous.point, current.point);
+    distance += currentDistance;
+    duration += currentDistance / current.speed;
+    previous = data[i];
+  }
+  return [distance, duration];
 }
 
-function createStep(data) {
+function createStep (data) {
   const [distance, duration] = getDetails(data);
   return {
     distance: {
@@ -147,7 +147,7 @@ function createStep(data) {
   };
 }
 
-function initMap() {
+function initMap () {
   const service = new google.maps.DirectionsService();
   const map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: -34.397, lng: 150.644},
@@ -163,7 +163,7 @@ function initMap() {
   };
 
   service.route(request, function (result, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
+    if (status === google.maps.DirectionsStatus.OK) {
       if (result.routes.length && result.routes[0].legs.length && result.routes[0].legs[0].steps.length) {
         map.fitBounds(result.routes[0].bounds);
         const duration = result.routes[0].legs[0].duration.value;
