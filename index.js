@@ -3,7 +3,7 @@ window.addEventListener('load', () => {
   const script = document.createElement('script');
   script.async = true;
   script.defer = true;
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=${initMap.name}`;
   script.type = 'text/javascript';
   head.appendChild(script);
 });
