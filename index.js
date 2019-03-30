@@ -91,7 +91,7 @@ function splitSteps (steps, duration) {
     }
   }
 
-  data = withoutDuplicates(data, function (a, b) {
+  data = withoutDuplicates(data, (a, b) => {
     return google.maps.geometry.spherical.computeDistanceBetween(a.point, b.point) === 0;
   });
 
@@ -142,7 +142,7 @@ function createStep (data) {
       text: duration.toString(),
       value: duration
     },
-    path: data.map(function (d) { return d.point; }),
+    path: data.map((d) => d.point),
     travel_mode: google.maps.DirectionsTravelMode.DRIVING
   };
 }
@@ -162,7 +162,7 @@ function initMap () {
     travelMode: google.maps.DirectionsTravelMode.DRIVING
   };
 
-  service.route(request, function (result, status) {
+  service.route(request, (result, status) => {
     if (status === google.maps.DirectionsStatus.OK) {
       if (result.routes.length && result.routes[0].legs.length && result.routes[0].legs[0].steps.length) {
         map.fitBounds(result.routes[0].bounds);
@@ -170,7 +170,7 @@ function initMap () {
 
         const start = result.routes[0].legs[0].start_location;
 
-        splitSteps(result.routes[0].legs[0].steps, 600).forEach(function (step, i, steps) {
+        splitSteps(result.routes[0].legs[0].steps, 600).forEach((step, i, steps) => {
           const hue = 360 - (i * (360 / steps.length));
           const end = step.path[step.path.length - 1];
           const radius = google.maps.geometry.spherical.computeDistanceBetween(start, end);
